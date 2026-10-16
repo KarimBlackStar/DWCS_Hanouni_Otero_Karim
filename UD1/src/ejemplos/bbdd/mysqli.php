@@ -35,6 +35,7 @@ function getClientes(): array
     $resultado = $conexion->query($sql);
     while($fila = $resultado->fetch_array()){
         $toret[] = $fila; //["nombre"=>"pedro","telefono"=>"9893213" ];
+        $fila["nombre"];
     }
     $conexion->close();
     return $toret;
