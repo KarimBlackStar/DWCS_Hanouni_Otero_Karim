@@ -34,7 +34,6 @@
 if (isset($_POST['nombre']) && !empty($_POST['nombre'])) {
     $nombre = $_POST['nombre'];
     var_dump($_POST);
-
 }
 ?>
 </body>
