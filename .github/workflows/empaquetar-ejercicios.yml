@@ -1,0 +1,104 @@
+name: Empaquetar Ejercicios para NotebookLM
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - 'APUNTES_Y_EJERCICIOS.md'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  empaquetar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Recorrer carpetas y empaquetar código en Markdown
+        run: |
+          OUT="APUNTES_Y_EJERCICIOS.md"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          
+          echo "# 📦 Repositorio de Asignatura: $REPO_NAME" > "$OUT"
+          echo "_Actualizado automáticamente: $(date -u '+%Y-%m-%d %H:%M UTC')_" >> "$OUT"
+          echo "" >> "$OUT"
+          
+          echo "## 📂 Índice de ejercicios incluidos" >> "$OUT"
+          find . -type f \( \
+            -name "*.php" -o -name "*.js" -o -name "*.java" -o \
+            -name "*.html" -o -name "*.css" -o -name "*.sql" -o \
+            -name "*.sh" -o -name "*.ps1" -o -name "*.json" -o \
+            -name "*.yml" -o -name "*.yaml" -o -name "Dockerfile*" -o \
+            -name "*.conf" -o -name "*.md" -o -name "*.txt" \
+          \) \
+          ! -name "$OUT" \
+          ! -name "package-lock.json" \
+          ! -name "composer.lock" \
+          ! -path "./.git/*" \
+          ! -path "./.github/*" \
+          ! -path "./node_modules/*" \
+          ! -path "./vendor/*" \
+          ! -path "./.idea/*" \
+          ! -path "./.vscode/*" \
+          ! -path "./dist/*" \
+          ! -path "./build/*" | sort | while read -r file; do
+            echo "- \`${file#./}\`" >> "$OUT"
+          done
+
+          echo "" >> "$OUT"
+
+          find . -type f \( \
+            -name "*.php" -o -name "*.js" -o -name "*.java" -o \
+            -name "*.html" -o -name "*.css" -o -name "*.sql" -o \
+            -name "*.sh" -o -name "*.ps1" -o -name "*.json" -o \
+            -name "*.yml" -o -name "*.yaml" -o -name "Dockerfile*" -o \
+            -name "*.conf" -o -name "*.md" -o -name "*.txt" \
+          \) \
+          ! -name "$OUT" \
+          ! -name "package-lock.json" \
+          ! -name "composer.lock" \
+          ! -path "./.git/*" \
+          ! -path "./.github/*" \
+          ! -path "./node_modules/*" \
+          ! -path "./vendor/*" \
+          ! -path "./.idea/*" \
+          ! -path "./.vscode/*" \
+          ! -path "./dist/*" \
+          ! -path "./build/*" | sort | while read -r file; do
+            
+            clean_path="${file#./}"
+            filename=$(basename "$file")
+            ext="${filename##*.}"
+            
+            echo "" >> "$OUT"
+            echo "---" >> "$OUT"
+            echo "## 📄 Ejercicio / Archivo: $clean_path" >> "$OUT"
+            echo "---" >> "$OUT"
+            echo "" >> "$OUT"
+            
+            if [ "$ext" = "md" ]; then
+              cat "$file" >> "$OUT"
+            elif [[ "$filename" == Dockerfile* ]]; then
+              echo "\`\`\`dockerfile" >> "$OUT"
+              cat "$file" >> "$OUT"
+              echo "" >> "$OUT"
+              echo "\`\`\`" >> "$OUT"
+            else
+              echo "\`\`\`$ext" >> "$OUT"
+              cat "$file" >> "$OUT"
+              echo "" >> "$OUT"
+              echo "\`\`\`" >> "$OUT"
+            fi
+          done
+
+      - name: Subir archivo unificado al repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add APUNTES_Y_EJERCICIOS.md
+          git diff --staged --quiet || git commit -m "docs: actualizar APUNTES_Y_EJERCICIOS.md automáticamente"
+          git push
