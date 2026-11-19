@@ -9,7 +9,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'GET') {
 } else if ($_SERVER["REQUEST_METHOD"] === 'POST') {
     $nic = $_POST['nic'] ?? null;
     $pass = $_POST['pass'] ?? null;
-    
+    $recuerda = $_POST['recuerda'] ?? false;
 
     if (!empty($nic) && !empty($pass)) {
         if (comprobar_usuario($nic, $pass)) {
